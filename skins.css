@@ -1,0 +1,36 @@
+/* Estilos del selector de skins y ajustes específicos por skin.
+   Reutiliza las custom properties definidas en style.css. */
+
+#skin-select {
+  background: var(--kbd-bg);
+  color: var(--kbd-text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#skin-select:hover {
+  border-color: var(--board-border);
+}
+
+#skin-select:focus {
+  outline: 1px solid var(--value-color);
+  outline-offset: 1px;
+}
+
+/* ---- Skin: Neon ---- */
+/* Fondo del tablero más oscuro y título con más resplandor para reforzar
+   la estética neon, sin afectar al resto de skins. */
+[data-skin="neon"] #board,
+[data-skin="neon"] #next-canvas {
+  background: #060608;
+  border-color: #1a1a1a;
+}
+
+[data-skin="neon"] .game-title {
+  text-shadow: 0 0 24px var(--title-shadow), 0 0 8px var(--title-color);
+}
