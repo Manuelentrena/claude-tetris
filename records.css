@@ -1,0 +1,113 @@
+/* ---- Records / puntuaciones ---- */
+
+.records-list {
+  list-style: decimal inside;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: var(--value-color);
+}
+
+.records-list li {
+  padding: 2px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.records-list li.highlight {
+  background: var(--restart-bg);
+  color: var(--restart-text);
+  font-weight: 700;
+}
+
+.records-empty {
+  font-size: 11px;
+  color: var(--label-color);
+  font-style: italic;
+}
+
+.best-stats {
+  font-size: 11px !important;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--control-text);
+}
+
+#reset-records {
+  background: transparent;
+  color: var(--control-text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  align-self: flex-start;
+  transition: background 0.15s, color 0.15s;
+}
+
+#reset-records:hover {
+  background: var(--kbd-bg);
+  color: var(--text);
+}
+
+/* ---- Formulario de nombre (game over) ---- */
+#gameover-records {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+#gameover-records.hidden {
+  display: none;
+}
+
+#name-form {
+  display: flex;
+  gap: 6px;
+}
+
+#name-form.hidden {
+  display: none;
+}
+
+#player-name {
+  flex: 1;
+  min-width: 0;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+}
+
+#player-name:focus {
+  outline: 1px solid var(--value-color);
+}
+
+#name-form button {
+  background: var(--restart-bg);
+  color: var(--restart-text);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#name-form button:hover {
+  background: var(--restart-hover);
+}
+
+#overlay-records .records-list {
+  font-size: 13px;
+}

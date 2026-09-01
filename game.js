@@ -47,8 +47,15 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
+const recordsPanelEl = document.getElementById('records-panel');
+const bestStatsEl = document.getElementById('best-stats');
+const resetRecordsBtn = document.getElementById('reset-records');
+const gameoverRecordsEl = document.getElementById('gameover-records');
+const nameFormEl = document.getElementById('name-form');
+const playerNameEl = document.getElementById('player-name');
+const overlayRecordsEl = document.getElementById('overlay-records');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, combo, maxCombo;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -118,7 +125,12 @@ function clearLines() {
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    // combo: se incrementa mientras se sigan limpiando líneas sin fallar
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
     updateHUD();
+  } else {
+    combo = 0;
   }
 }
 
@@ -238,7 +250,23 @@ function endGame() {
   draw();
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
-  overlay.classList.remove('hidden');
+
+  updateStats({ combo: maxCombo, lines });
+  renderSidePanel();
+
+  gameoverRecordsEl.classList.remove('hidden');
+  if (qualifies(score)) {
+    // la puntuación entra en el top 5: pedir nombre antes de guardarla
+    nameFormEl.classList.remove('hidden');
+    overlayRecordsEl.innerHTML = '';
+    playerNameEl.value = '';
+    overlay.classList.remove('hidden');
+    playerNameEl.focus();
+  } else {
+    nameFormEl.classList.add('hidden');
+    renderScores(overlayRecordsEl);
+    overlay.classList.remove('hidden');
+  }
 }
 
 function togglePause() {
@@ -283,11 +311,14 @@ function init() {
   gameOver = false;
   dropInterval = 1000;
   dropAccum = 0;
+  combo = 0;
+  maxCombo = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  gameoverRecordsEl.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
@@ -317,7 +348,37 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => {
+  // evitar perder una puntuación que aún no se ha guardado en los records
+  const pendingSave = gameOver && !nameFormEl.classList.contains('hidden');
+  if (pendingSave && !confirm('Tu puntuación aún no se ha guardado en los records. ¿Reiniciar de todas formas?')) {
+    return;
+  }
+  init();
+});
+
+// Refresca el panel lateral de records + estadísticas (combo y líneas máximas).
+function renderSidePanel() {
+  renderScores(recordsPanelEl);
+  const stats = loadStats();
+  bestStatsEl.textContent = `Combo: ${stats.bestCombo} · Líneas: ${stats.bestLines}`;
+}
+
+nameFormEl.addEventListener('submit', e => {
+  e.preventDefault(); // crítico: sin esto la página recarga
+  const raw = playerNameEl.value.trim();
+  const name = raw || '???';
+  const idx = saveScore({ name, score, lines, level, date: new Date().toISOString() });
+  renderScores(overlayRecordsEl, idx);
+  renderSidePanel();
+  nameFormEl.classList.add('hidden');
+});
+
+resetRecordsBtn.addEventListener('click', () => {
+  if (!confirm('¿Borrar todos los records?')) return;
+  resetRecords();
+  renderSidePanel();
+});
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -340,4 +401,5 @@ themeToggleBtn.addEventListener('click', () => {
 
 applyTheme(getPreferredTheme());
 
+renderSidePanel();
 init();
