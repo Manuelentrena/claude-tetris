@@ -4,18 +4,6 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#90caf9', // J - pale blue
-  '#ffb74d', // L - orange
-  '#c8a2ff', // Ring - lila
-];
-
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -33,7 +21,6 @@ const RING = 8;              // índice del anillo en PIECES / COLORS
 const RING_CHANCE = 1 / 16;  // probabilidad de que salga el anillo
 
 const THEME_KEY = 'tetris-theme';
-const GRID_COLORS = { dark: '#22222e', light: '#d8d8e6' };
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -47,6 +34,7 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -167,21 +155,26 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+// Devuelve el objeto de skin activo (según data-skin en <html>), con fallback a retro.
+function activeSkin() {
+  const name = document.documentElement.getAttribute('data-skin');
+  return SKINS[name] || SKINS.retro;
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const skin = activeSkin();
+  const px = x * size;
+  const py = y * size;
+  const color = skin.colors[colorIndex];
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  skin.drawBlock(context, px, py, size, color, alpha);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
   const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  ctx.strokeStyle = GRID_COLORS[theme];
+  ctx.strokeStyle = activeSkin().grid[theme];
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -199,6 +192,9 @@ function drawGrid() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Reset por seguridad: el skin neon deja shadowBlur activo en el contexto
+  // y no debe filtrarse a las líneas de la rejilla.
+  ctx.shadowBlur = 0;
   drawGrid();
 
   // board
@@ -338,6 +334,18 @@ themeToggleBtn.addEventListener('click', () => {
   draw();
 });
 
+skinSelect.addEventListener('change', () => {
+  const skin = skinSelect.value;
+  localStorage.setItem(SKIN_KEY, skin);
+  applySkin(skin);
+  // Redibujar ambos canvases para que el cambio se vea sin recargar la página.
+  draw();
+  drawNext();
+});
+
 applyTheme(getPreferredTheme());
+const preferredSkin = getPreferredSkin();
+applySkin(preferredSkin);
+skinSelect.value = preferredSkin;
 
 init();
